@@ -1,0 +1,170 @@
+Last login: Sat Aug 17 01:48:48 2024 from 192.168.0.1
+s1-leaf2#show running-config 
+! Command: show running-config
+! device: s1-leaf2 (cEOSLab, EOS-4.32.0F-36401836.4320F (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret 5 $1$5O85YVVn$HrXcfOivJEnISTMb6xrJc.
+username arista privilege 15 role network-admin secret 5 $1$4VjIjfd1$XkUVulbNDESHFzcxDU.Tk1
+username arista ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCdDjrniF+W55GoR8FlHrmfGw3wYVCZQUpJ5PP3PqBMrDKKKdx3XJDUh6NdjoU1Aca6YWRJAMkNvWpDC5oX/2CQqvFoIE9K39B2SU/JWQVytS7EKC6wPSE5EeMUrSt2i53imPxnjwxT7qAXsU8O/zS9H/1RDf+752ZcCtLBUQepZ+erA2c2OlznYMxEzUlTpeJuW249Bvi0XN/hhK99pq9ixrOHW1ywg+d1ksFyOCTEy0zKRlYVkecM/sTX0RSlN/8RncI3sqIxAZNtCcBBdvCWuiy+0BmnsaM/kPDfumSuxVii0wK6MjJhrbptQjKpL0UnbfwMXCZUH2E0J3oQ0hgP arista@eia-arista-intro-6-506d5dcd-eos.c.atds-280712.internal
+!
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -cvcompression=gzip -smashexcludes=ale,flexCounter,hardware,kni,pulse,strata -ingestexclude=/Sysdb/cell/1/agent,/Sysdb/cell/2/agent -cvaddr=192.168.0.5:9910 -cvauth=token,/tmp/token -cvvrf=default -taillogs -disableaaa
+   no shutdown
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname s1-leaf2
+dns domain atd.lab
+!
+spanning-tree mode mstp
+no spanning-tree vlan-id 4094
+!
+system l1
+   unsupported speed action error
+   unsupported error-correction action error
+!
+vlan 112
+   name Host_Network_112
+!
+vlan 4094
+   name MLAG_VLAN
+   trunk group MLAGPEER
+!
+vrf instance TENANT
+!
+management api http-commands
+   no shutdown
+!
+radius-server host 192.168.0.1 key 7 0207165218120E
+!
+aaa group server radius atds
+   server 192.168.0.1
+!
+aaa authentication login default group atds local
+aaa authorization exec default group atds local
+aaa authorization commands all default local
+!
+interface Port-Channel1
+   description MLAG Peer-link - s1-leaf1
+   switchport mode trunk
+   switchport trunk group MLAGPEER
+!
+interface Port-Channel5
+   description MLAG Downlink - s1-host1
+   switchport access vlan 112
+   mlag 5
+!
+interface Ethernet1
+   description MLAG Peer-link - s1-leaf1
+   switchport mode trunk
+   channel-group 1 mode active
+!
+interface Ethernet2
+   description L3 Uplink - s1-spine1
+   no switchport
+   ip address 10.111.1.3/31
+!
+interface Ethernet3
+   description L3 Uplink - s1-spine2
+   no switchport
+   ip address 10.111.2.3/31
+!
+interface Ethernet4
+   description MLAG Downlink - s1-host1
+   channel-group 5 mode active
+!
+interface Ethernet6
+   description MLAG Peer-link - s1-leaf1
+   switchport mode trunk
+   channel-group 1 mode active
+!
+interface Loopback0
+   description Management and Router-id
+   ip address 10.111.254.2/32
+!
+interface Loopback1
+   description VTEP
+   ip address 10.111.253.1/32
+!
+interface Management0
+   ip address 192.168.0.13/24
+!
+interface Vlan112
+   description Host Network
+   vrf TENANT
+   ip address virtual 10.111.112.1/24
+!
+interface Vlan4094
+   description MLAG Peer Network
+   ip address 10.255.255.2/30
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan virtual-router encapsulation mac-address mlag-system-id
+   vxlan udp-port 4789
+   vxlan vrf TENANT vni 5001
+!
+ip virtual-router mac-address 00:1c:73:00:00:01
+!
+ip routing
+ip routing vrf TENANT
+!
+ip prefix-list LOOPBACKS
+   seq 100 permit 10.111.253.0/24 eq 32
+   seq 110 permit 10.111.254.0/24 eq 32
+!
+mlag configuration
+   domain-id MLAG
+   local-interface Vlan4094
+   peer-address 10.255.255.1
+   peer-link Port-Channel1
+!
+ntp server 192.168.0.1 iburst source Management0
+!
+ip radius source-interface Management0
+!
+route-map LOOPBACKS permit 100
+   match ip address prefix-list LOOPBACKS
+!
+router bgp 65101
+   router-id 10.111.254.2
+   no bgp default ipv4-unicast
+   rd auto
+   maximum-paths 2
+   neighbor MLAG peer group
+   neighbor MLAG remote-as 65101
+   neighbor MLAG next-hop-self
+   neighbor MLAG send-community standard extended
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65100
+   neighbor SPINE send-community standard extended
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65100
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 3
+   neighbor SPINE-EVPN send-community standard extended
+   neighbor 10.111.0.1 peer group SPINE-EVPN
+   neighbor 10.111.0.2 peer group SPINE-EVPN
+   neighbor 10.111.1.2 peer group SPINE
+   neighbor 10.111.2.2 peer group SPINE
+   neighbor 10.255.255.1 peer group MLAG
+   !
+   address-family evpn
+      neighbor SPINE-EVPN activate
+   !
+   address-family ipv4
+      neighbor MLAG activate
+      neighbor SPINE activate
+      redistribute connected route-map LOOPBACKS
+   !
+   vrf TENANT
+      route-target import evpn 5001:5001
+      route-target export evpn 5001:5001
+      redistribute connected
+!
+end
+s1-leaf2#

@@ -1,0 +1,134 @@
+Last login: Mon Aug 19 19:21:24 2024 from 192.168.0.1
+s1-spine1#show run
+s1-spine1#show running-config 
+! Command: show running-config
+! device: s1-spine1 (cEOSLab, EOS-4.32.0F-36401836.4320F (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret 5 $1$5O85YVVn$HrXcfOivJEnISTMb6xrJc.
+username arista privilege 15 role network-admin secret 5 $1$4VjIjfd1$XkUVulbNDESHFzcxDU.Tk1
+username arista ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFzzWWpvi+KM08aB4LzEDBMZ1w+jsT+qcZIjn7lG5sYcnIEZbzg8n74WVc4Rmhd6X3EAdjjOUG4HvwSkdu/8xVccKrqpk8EvVGfoMeRHgdd0TQY13zfv6qq+DUko8WkJczEVU3EtSujNCbxz4YBDpRWT2VjE9Nw1AOiAJ4MxDdCZQwhbhWCH17Tm16qAzBE6NVEgp/2aEPdfHfGgybf1n1OygKwS50f6uZuTpL3hQ7SWww6IERugl6cQthlWAczV5whm9uOVkzNglW+UVqI6d6nFbfO0GNLDdRdLZMj4xJp528gj8LZdbZkLdfHEsrsAr+f/6YIBOKNDdotoM3QDVb arista@eia-arista-intro-14-506d5dcd-eos.c.atds-280712.internal
+!
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -cvcompression=gzip -smashexcludes=ale,flexCounter,hardware,kni,pulse,strata -ingestexclude=/Sysdb/cell/1/agent,/Sysdb/cell/2/agent -cvaddr=192.168.0.5:9910 -cvauth=token,/tmp/token -cvvrf=default -taillogs -disableaaa
+   no shutdown
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname s1-spine1
+dns domain atd.lab
+!
+spanning-tree mode mstp
+!
+system l1
+   unsupported speed action error
+   unsupported error-correction action error
+!
+vrf instance Prod
+!
+management api http-commands
+   no shutdown
+!
+radius-server host 192.168.0.1 key 7 0207165218120E
+!
+aaa group server radius atds
+   server 192.168.0.1
+!
+aaa authentication login default group atds local
+aaa authorization exec default group atds local
+aaa authorization commands all default local
+!
+interface Ethernet1
+!
+interface Ethernet2
+   description to leaf1:Ethernet2
+   no switchport
+   ip address 10.255.0.0/31
+!
+interface Ethernet3
+   description to leaf2:Ethernet2
+   no switchport
+   ip address 10.255.0.4/31
+!
+interface Ethernet4
+   description to leaf3:Ethernet2
+   no switchport
+   ip address 10.255.0.8/31
+!
+interface Ethernet5
+   description to leaf4:Ethernet2
+   no switchport
+   ip address 10.255.0.12/31
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   description BGP Router ID
+   ip address 10.255.1.1/32
+!
+interface Management0
+   ip address 192.168.0.10/24
+!
+ip routing
+ip routing vrf Prod
+!
+ip prefix-list PL_LOOPBACKS
+   seq 10 permit 10.255.1.0/24 eq 32
+!
+ip prefix-list PL_P2P_UNDERLAY
+   seq 10 permit 10.255.0.0/24 le 31
+!
+ntp server 192.168.0.1 iburst source Management0
+!
+ip radius source-interface Management0
+!
+route-map RM-CONN-2-BGP permit 10
+   match ip address prefix-list PL_P2P_UNDERLAY
+!
+route-map RM-CONN-2-BGP permit 20
+   match ip address prefix-list PL_LOOPBACKS
+!
+peer-filter LEAF-AS-Range
+   10 match as-range 65001-65099 result accept
+!
+router bfd
+   multihop interval 1200 min-rx 1200 multiplier 3
+!
+router bgp 65000
+   router-id 10.255.1.1
+   no bgp default ipv4-unicast
+   distance bgp 20 200 200
+   graceful-restart restart-time 300
+   graceful-restart
+   maximum-paths 4 ecmp 4
+   bgp listen range 10.255.1.0/24 peer-group EVPN_OVERLAY_PEERS peer-filter LEAF-AS-Range
+   bgp listen range 10.255.0.0/24 peer-group IPv4_UNDERLAY_PEERS peer-filter LEAF-AS-Range
+   neighbor EVPN_OVERLAY_PEERS peer group
+   neighbor EVPN_OVERLAY_PEERS next-hop-unchanged
+   neighbor EVPN_OVERLAY_PEERS update-source Loopback0
+   neighbor EVPN_OVERLAY_PEERS bfd
+   neighbor EVPN_OVERLAY_PEERS description evpn overlay peering
+   neighbor EVPN_OVERLAY_PEERS ebgp-multihop 3
+   neighbor EVPN_OVERLAY_PEERS send-community
+   neighbor EVPN_OVERLAY_PEERS maximum-routes 0 warning-limit 12000
+   neighbor IPv4_UNDERLAY_PEERS peer group
+   neighbor IPv4_UNDERLAY_PEERS description ipv4 peering
+   neighbor IPv4_UNDERLAY_PEERS send-community
+   neighbor IPv4_UNDERLAY_PEERS maximum-routes 12000
+   redistribute connected route-map RM-CONN-2-BGP
+   !
+   address-family evpn
+      neighbor EVPN_OVERLAY_PEERS activate
+   !
+   address-family ipv4
+      neighbor IPv4_UNDERLAY_PEERS activate
+!
+end
+s1-spine1#

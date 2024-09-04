@@ -1,0 +1,109 @@
+name: medialab
+
+mgmt:
+  network: mgmt  
+  ipv4-subnet: 172.20.16.0/24
+
+topology:
+  defaults:
+    kind: ceos
+    image: ceos:4.32.0.1F
+
+  nodes:
+    s1-host1:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+      exec:
+        - echo "install networking utilities on s1-host1"
+        - apk update
+        - apk add iproute2 iputils
+        - ip addr add 172.16.15.5/24 dev eth1
+        - apk add openssh-server  
+        - /etc/init.d/sshd start   
+
+    s1-host2:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity         
+      exec:
+        - echo "install networking utilities on s1-host2"
+        - apk update
+        - apk add iproute2 iputils
+        - ip addr add 172.16.46.6/24 dev eth2
+        - apk add openssh-server  
+        - /etc/init.d/sshd start  
+
+    s1-spine1:
+      kind: ceos
+      mgmt-ipv4: 172.20.16.10
+      
+    s1-spine2:
+      kind: ceos
+      mgmt-ipv4: 172.20.16.20
+      
+    s1-leaf1:
+      kind: ceos
+      mgmt-ipv4: 172.20.16.30
+                  
+    s1-leaf4:
+      kind: ceos
+      mgmt-ipv4: 172.20.16.40
+      
+  links:  
+    - endpoints: ["s1-host1:eth1", "s1-leaf1:eth4"]
+    - endpoints: ["s1-leaf1:eth2", "s1-spine1:eth2"]
+    - endpoints: ["s1-spine1:eth1", "s1-spine2:eth1"]
+    - endpoints: ["s1-spine2:eth5", "s1-leaf4:eth3"]
+    - endpoints: ["s1-leaf4:eth4", "s1-host2:eth2"]
+
+
+    - type: dummy
+      endpoint:
+        node: s1-leaf1
+        interface: eth1
+        
+    - type: dummy
+      endpoint:
+        node: s1-leaf1
+        interface: eth3
+    
+    - type: dummy
+      endpoint:
+        node: s1-spine1
+        interface: eth3
+        
+    - type: dummy
+      endpoint:
+        node: s1-spine1
+        interface: eth4
+        
+    - type: dummy
+      endpoint:
+        node: s1-spine1
+        interface: eth5
+        
+    - type: dummy
+      endpoint:
+        node: s1-spine2
+        interface: eth2
+        
+    - type: dummy
+      endpoint:
+        node: s1-spine2
+        interface: eth3
+        
+    - type: dummy
+      endpoint:
+        node: s1-spine2
+        interface: eth4    
+
+    - type: dummy
+      endpoint:
+        node: s1-leaf4
+        interface: eth1
+    
+    - type: dummy
+      endpoint:
+        node: s1-leaf4
+        interface: eth2

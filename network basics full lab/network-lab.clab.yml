@@ -1,0 +1,96 @@
+name: network-lab
+
+topology:
+  nodes:
+    R1:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.10
+
+    ISP:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.12
+
+    Core_1:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.4
+
+    Core_2:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.5
+
+    Distro_1:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.6
+
+    Distro_2:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.7
+
+    as01:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.8
+
+    as02:
+      kind: ceos
+      image: ceos:4.32.0.1F
+      mgmt-ipv4: 172.20.20.9
+
+    ip_phone_1:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+    ip_phone_2:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+    Printer_1:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+    Printer_2:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+    PC_1:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+    PC_2:
+      kind: linux
+      image: alpine:latest
+      cmd: sleep infinity
+
+  links:
+    - endpoints: ["R1:eth1", "Core_1:eth1"]
+    - endpoints: ["R1:eth2", "Core_2:eth2"]
+    - endpoints: ["R1:eth20", "ISP:eth20"]
+    - endpoints: ["Core_1:eth4", "Core_2:eth4"]
+    - endpoints: ["Core_1:eth5", "Core_2:eth5"] 
+    - endpoints: ["Core_1:eth6", "Distro_1:eth6"]
+    - endpoints: ["Core_2:eth6", "Distro_2:eth6"]
+    - endpoints: ["Core_1:eth7", "Distro_2:eth7"]
+    - endpoints: ["Core_2:eth7", "Distro_1:eth7"]
+    - endpoints: ["Distro_1:eth4", "Distro_2:eth4"]
+    - endpoints: ["Distro_1:eth5", "Distro_2:eth5"]
+    - endpoints: ["Distro_1:eth1", "as01:eth1"]
+    - endpoints: ["Distro_1:eth2", "as02:eth2"]
+    - endpoints: ["Distro_2:eth1", "as02:eth1"]
+    - endpoints: ["Distro_2:eth2", "as01:eth2"]
+    - endpoints: ["as01:eth3", "ip_phone_1:eth2"]
+    - endpoints: ["as01:eth4", "Printer_1:eth1"]
+    - endpoints: ["ip_phone_1:eth1", "PC_1:eth1"]
+    - endpoints: ["as02:eth3", "ip_phone_2:eth2"]
+    - endpoints: ["as02:eth4", "Printer_2:eth1"]
+    - endpoints: ["ip_phone_2:eth1", "PC_2:eth1"]

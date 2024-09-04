@@ -1,0 +1,159 @@
+STEPS TO COMPLETE THIS LAB
+
+
+
+The tasks are described as if you are on the job, and someone asks you to configure this network. It’s not a cookbook where we tell exactly what to do and in what order.  This helps you think through what is really needed instead of just typing in commands.
+
+
+
+
+Basics
+Each device should have a configured hostname.
+Logging messages on R1 should never interrupt what you are typing on the CLI.
+The console log on R1 should never timeout if you are idle.
+The interfaces on the core switches that connect to R1 require a description so you know what the interfaces are for.
+When you mistype a command on R1, it shouldn’t attempt to connect to a hostname.
+
+
+REQUIRED VLANs:
+ 
+VLAN 100: DATA
+VLAN 200: VOICE
+VLAN 300: PRINTERS
+VLAN 408: MGMT
+
+
+H1 and H2 should be assigned to VLAN 10.
+Prepare interface GigabitEthernet 0/2 on ASW1 so that the interface can connect to a computer in VLAN 10 and a phone in VLAN 20.
+Configure required trunks between the access and distribution layer switches:
+The access layer switches should use a dynamic method to negotiate the trunk link.
+The distribution layer switches should use a static method to create a trunk.
+The links between the distribution layer switches have to be bundled:
+You need to use a negotiation, but due to company policy, you are not allowed to use a proprietary protocol.
+DSW1 should actively negotiate, while DSW2 should only respond to requests.
+The links between the core layer switches have to be bundled:
+You are not allowed to use any protocols to establish this link.
+Configure the network so that we use the fastest spanning tree protocol option. A spanning tree should be calculated for every VLAN.
+The DSW1 switch has to be the root bridge for all VLANs. When this switch fails, SW2 should take over.
+The hosts are modern computers that boot up in a couple of seconds. Make sure that when they are connected, they can send traffic immediately, and they don’t have to wait for the network to converge.
+The security officer fears malicious hosts might attempt to influence the spanning tree protocol. Here are your requirements to deal with this:
+When a host sends a BPDU, the interface should go down immediately.
+The interface should recover automatically after 10 minutes.
+Company policy dictates that you should use different timers for spanning tree:
+Spanning tree BPDUs should be sent every three seconds.
+The port state should transition after ten seconds when a new configuration BPDU propagates throughout the network.
+A configuration BPDU should expire after 15 seconds.
+Ensure these timers are always used, even when another switch becomes the root bridge.
+IP Addressing
+The campus network requires IPv4 and IPv6 addressing.
+
+IPv4
+Here are the requirements for IPv4:
+
+NETWORK TO USE 172.64.0.0/ prefix.
+
+The VLANs have the following requirements:
+VLAN 100: contains a maximum of 100 devices.
+VLAN 200: contains a maximum of 40 devices.
+VLAN 300: contains a maximum of 12 devices.
+VLAN 408: contains a maximum of 6 devices.
+
+Each device requires a loopback interface with a /32 IP address.
+
+Point-to-point links require IP addresses (when needed)
+
+The link between R1 and ISP uses the 10.10.10.0/30 subnet:
+R1: 10.10.10.1
+ISP: 10.10.10.2
+
+You must be as efficient with IP address space while considering future growth for new network devices and VLANs.
+
+
+IPv6
+Here are the requirements for IPv6:
+
+You must use the 2001:db8::/32 prefix.
+Create an addressing scheme and take this into account:
+VLANs: use a /64 prefix.
+Loopback interfaces: Use a /128 prefix.
+Point-to-point links: Use a /127 prefix.
+Configure all IPv6 addresses.
+
+Routing Technologies
+The campus network requires IPv4 and IPv6 routing.
+
+
+
+IPv4
+Here are the IPv4 requirements:
+
+Configure R1 to reach 1.1.1.1 or any other network behind the ISP router. You are not allowed to make any changes to the ISP router.
+Configure the campus network so all VLANs, point-to-point links, and loopback interfaces are reachable:
+You must use a non-proprietary link-state routing protocol that converges quickly.
+All devices should be in a single area.
+Distribution layer switches shouldn’t have any unnecessary neighbor adjacencies.
+The core layer switches should not have a DR/BDR election on their bundled interface.
+The core layer switches neighbor adjacency requires fast convergence:
+A hello packet should be sent every 5 seconds.
+The neighbor adjacency should be declared down after not receiving hello packets for 15 seconds.
+All loopback and VLAN interfaces should be reachable.
+IPv6
+Here are the IPv6 requirements:
+
+Configure R1 so that you can reach 2001:DB8::1:1:1:1 or any other network behind the ISP router. You are not allowed to make any changes to the ISP router.
+Configure internal routing on all campus network devices:
+Use the IPv4 address on the loopback interfaces as the router ID.
+Use a single area.
+Ensure there are no unneeded neighbor adjacencies between the distribution layer switches.
+Advertise a default route on R1 in the routing protocol.
+All loopback and VLAN interfaces should be reachable.
+Network Services
+Users in VLAN 10 have been complaining that their default gateway sometimes becomes unreachable. This happens because of stability issues on DSW1 and DSW2.
+
+Configure a virtual default gateway address for VLAN 10 so that this won’t cause any more issues.
+Hosts should be able to receive IP addresses automatically:
+
+Configure a pool on R1 for VLAN 10 with these requirements:
+Use the virtual gateway address as the default gateway.
+Use DNS server 1.1.1.1.
+Use domain name MYDOMAIN.LOCAL
+Lease time 48 hours.
+Configure a pool on R1 for VLAN 20 and include the IP address of TFTP server 10.0.0.135.
+Test the IP address assignment by disabling routing on H1 and H2 and enable the DHCP client.
+Users request access to the server on 1.1.1.1:
+
+Configure R1 so that all campus switches and hosts can reach 1.1.1.1.
+You are not allowed to make any changes to the ISP router.
+The security officer noticed that the logging information was inconsistent. To solve this, all clocks on the switches have to be synchronized:
+
+R1 should use 1.1.1.1 as the time source.
+Core layer switches should use R1 as the time source.
+Distribution layer switches should use the core switches as a time source.
+Access layer switches should use the distribution layer switches as a time source.
+
+
+Security
+The company policy requires some security measures:
+
+When someone logs into R1, it should show an “authorized users only” message.
+CSW1 should show a MOTD message: “This is CSW1”.
+Interface GigabitEthernet1/0 on ASW1 which connects to H1 should be protected:
+Only a single MAC address is allowed.
+The first learned MAC address should be stored.
+When there is a violation, the interface should be shut.
+Hosts in VLAN 10 are not allowed to reach the HTTP server on 1.1.1.1. All other traffic is permitted.
+
+
+Network Management
+DSW1 requires an external syslog server located at 10.0.0.240.
+Configure the Cisco proprietary discovery protocol so that switches and R1 can learn about each other:
+Messages should be sent every five seconds.
+When a device doesn’t receive any messages, information should be discarded after 60 seconds.
+Messages should not be sent to hosts or the ISP.
+Configure a non-proprietary discovery protocol on the access layer switches:
+Don’t send or receive messages on the interfaces that connect to the distribution layer switches.
+Don’t send any messages to hosts but you should receive them.
+CSW1 should be configured so that you can connect to it remotely in a secure way:
+Use username “cisco” with password “cisco”.
+The password should not be stored in clear text.
+Telnet traffic should not be permitted.

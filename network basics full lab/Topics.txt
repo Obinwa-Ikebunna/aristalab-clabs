@@ -1,0 +1,63 @@
+THIS LAB CONSISTS A LITTLE OF THIS TOPICS 
+
+LAN Switching Technologies
+IP Addressing {IPv4, IPv6}
+
+Routing Technologies {Static and dynamic routing of choice for IPv4 & IPv6, Loopback}
+Network Services like {HSRP, VRRP}
+Security {ACL, Network access, MAC filtering, Port security, Segmentation}
+Network Management {syslog server, CDP/lldp, SSH/Telnet}
+Software {Software version/system version and compatibility}
+
+
+****LIST TO KEEP IN MIND AS YOU WORK THROUGH THIS LAB****
+Hostname
+Logging Synchronous
+Exec Timeout
+Interface Description
+DNS Lookups
+LAN Switching Technologies
+VLANs
+Basic VLAN
+Switchport VLAN Assignment
+Voice VLAN
+Trunks
+EtherChannel
+L2 EtherChannel
+L3 EtherChannel
+Spanning Tree (STP)
+RPVST
+Primary and Secondary Root
+STP Portfast and BPDU Guard
+Spanning Tree Timers
+IP Addressing
+IPv4
+VLANs
+Loopback Addresses
+Point-to-Point Links
+IPv6
+VLANs
+Loopback Interfaces
+Point-to-Point links
+Routing Technologies
+IPv4
+Static Routing
+OSPFv2
+IPv6
+Static Routing
+OSPFv3
+Network Services
+Gateway Redundancy
+DHCP
+NAT
+NTP
+Security
+Banners
+Port Security
+Access-List
+Network Management
+Syslog
+Network Discovery
+Cisco Discovery Protocol (CDP)
+LLDP
+SSH
